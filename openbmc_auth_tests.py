@@ -9,9 +9,13 @@ def create_driver():
     options = Options()
     options.binary_location = "/usr/bin/chromium"
     options.accept_insecure_certs = True
+    
+    # ДОБАВЬ ВОТ ЭТИ СТРОКИ:
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--headless') 
 
     return webdriver.Chrome(options=options)
-
 
 def login(driver):
     driver.get("https://127.0.0.1:2443")
