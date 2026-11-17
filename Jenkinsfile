@@ -38,9 +38,9 @@ pipeline {
         stage('Start QEMU with OpenBMC') {
             steps {
                 sh """
-                    if pgrep -f qemu-system-arm > /dev/null; then
+                    if pgrep -x qemu-system-arm > /dev/null; then
                         echo "QEMU already running, killing it first"
-                        pkill -f qemu-system-arm || true
+                        pkill -x qemu-system-arm || true
                         sleep 2
                     fi
 
@@ -85,14 +85,16 @@ pipeline {
 
         stage('API tests (PyTest + Redfish)') {
             steps {
-                sh """
-                    . ${VENV_DIR}/bin/activate
-                    mkdir -p ${REPORT_DIR}/api-tests
-                    pytest test_redfish.py \\
-                        --junitxml=${REPORT_DIR}/api-tests/junit.xml \\
-                        --html=${REPORT_DIR}/api-tests/report.html --self-contained-html \\
-                        -v 2>&1 | tee ${REPORT_DIR}/api-tests/pytest.log || true
-                """
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    sh """
+                        . ${VENV_DIR}/bin/activate
+                        mkdir -p ${REPORT_DIR}/api-tests
+                        pytest test_redfish.py \\
+                            --junitxml=${REPORT_DIR}/api-tests/junit.xml \\
+                            --html=${REPORT_DIR}/api-tests/report.html --self-contained-html \\
+                            -v 2>&1 | tee ${REPORT_DIR}/api-tests/pytest.log
+                    """
+                }
             }
             post {
                 always {
@@ -110,12 +112,14 @@ pipeline {
 
         stage('WebUI tests (Selenium)') {
             steps {
-                sh """
-                    . ${VENV_DIR}/bin/activate
-                    mkdir -p ${REPORT_DIR}/webui-tests
-                    xvfb-run -a ${PYTHON} openbmc_auth_tests.py \\
-                        2>&1 | tee ${REPORT_DIR}/webui-tests/selenium.log || true
-                """
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    sh """
+                        . ${VENV_DIR}/bin/activate
+                        mkdir -p ${REPORT_DIR}/webui-tests
+                        xvfb-run -a ${PYTHON} openbmc_auth_tests.py \\
+                            2>&1 | tee ${REPORT_DIR}/webui-tests/selenium.log
+                    """
+                }
             }
             post {
                 always {
@@ -126,15 +130,17 @@ pipeline {
 
         stage('Load tests (Locust)') {
             steps {
-                sh """
-                    . ${VENV_DIR}/bin/activate
-                    mkdir -p ${REPORT_DIR}/load-tests
-                    locust -f locustfile.py \\
-                        --headless -u 20 -r 5 -t 60s \\
-                        --csv=${REPORT_DIR}/load-tests/locust \\
-                        --html=${REPORT_DIR}/load-tests/report.html \\
-                        2>&1 | tee ${REPORT_DIR}/load-tests/locust.log || true
-                """
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    sh """
+                        . ${VENV_DIR}/bin/activate
+                        mkdir -p ${REPORT_DIR}/load-tests
+                        locust -f locustfile.py \\
+                            --headless -u 20 -r 5 -t 60s \\
+                            --csv=${REPORT_DIR}/load-tests/locust \\
+                            --html=${REPORT_DIR}/load-tests/report.html \\
+                            2>&1 | tee ${REPORT_DIR}/load-tests/locust.log
+                    """
+                }
             }
             post {
                 always {
@@ -158,7 +164,7 @@ pipeline {
                     kill \$(cat ${QEMU_PIDFILE}) || true
                     rm -f ${QEMU_PIDFILE}
                 fi
-                pkill -f qemu-system-arm || true
+                pkill -x qemu-system-arm || true
             """
             archiveArtifacts artifacts: "${REPORT_DIR}/**", allowEmptyArchive: true
         }
