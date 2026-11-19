@@ -85,18 +85,18 @@ pipeline {
 
         stage('API tests (PyTest + Redfish)') {
             steps {
-                    sh """
-                        . ${VENV_DIR}/bin/activate 
-                        mkdir -p ${REPORT_DIR}/api-tests
-                        pytest test_redfish.py \\
-                            --junitxml=${REPORT_DIR}/api-tests/junit.xml \\
-                            --html=${REPORT_DIR}/api-tests/report.html --self-contained-html \\
-                            -v 2>&1 | tee ${REPORT_DIR}/api-tests/pytest.log || true
-                    """
+                sh """
+                    . ${VENV_DIR}/bin/activate 
+                    mkdir -p ${REPORT_DIR}/api-tests
+                    pytest test_redfish.py \\
+                        --junitxml=${REPORT_DIR}/api-tests/junit.xml \\
+                        --html=${REPORT_DIR}/api-tests/report.html --self-contained-html \\
+                        -v 2>&1 | tee ${REPORT_DIR}/api-tests/pytest.log || true
+                """
             }
             post {
                 always {
-                    junit allowEmptyResults: true, skipMarkingBuildUnstable, testResults: "${REPORT_DIR}/api-tests/junit.xml"
+                    junit allowEmptyResults: true, skipMarkingBuildUnstable: true, testResults: "${REPORT_DIR}/api-tests/junit.xml"
                     archiveArtifacts artifacts: "${REPORT_DIR}/api-tests/**", allowEmptyArchive: true
                     publishHTML(target: [
                         allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true,
@@ -110,12 +110,12 @@ pipeline {
 
         stage('WebUI tests (Selenium)') {
             steps {
-                    sh """
-                        . ${VENV_DIR}/bin/activate
-                        mkdir -p ${REPORT_DIR}/webui-tests
-                        xvfb-run -a ${PYTHON} openbmc_auth_tests.py \\
-                            2>&1 | tee ${REPORT_DIR}/webui-tests/selenium.log || true
-                    """
+                sh """
+                    . ${VENV_DIR}/bin/activate
+                    mkdir -p ${REPORT_DIR}/webui-tests
+                    xvfb-run -a ${PYTHON} openbmc_auth_tests.py \\
+                        2>&1 | tee ${REPORT_DIR}/webui-tests/selenium.log || true
+                """
             }
             post {
                 always {
@@ -126,15 +126,15 @@ pipeline {
 
         stage('Load tests (Locust)') {
             steps {
-                    sh """
-                        . ${VENV_DIR}/bin/activate 
-                        mkdir -p ${REPORT_DIR}/load-tests
-                        locust -f locustfile.py \\
-                            --headless -u 20 -r 5 -t 60s \\
-                            --csv=${REPORT_DIR}/load-tests/locust \\
-                            --html=${REPORT_DIR}/load-tests/report.html \\
-                            2>&1 | tee ${REPORT_DIR}/load-tests/locust.log || true
-                    """
+                sh """
+                    . ${VENV_DIR}/bin/activate 
+                    mkdir -p ${REPORT_DIR}/load-tests
+                    locust -f locustfile.py \\
+                        --headless -u 20 -r 5 -t 60s \\
+                        --csv=${REPORT_DIR}/load-tests/locust \\
+                        --html=${REPORT_DIR}/load-tests/report.html \\
+                        2>&1 | tee ${REPORT_DIR}/load-tests/locust.log || true
+                """
             }
             post {
                 always {
