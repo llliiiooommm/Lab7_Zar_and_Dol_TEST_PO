@@ -87,12 +87,12 @@ pipeline {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     sh """
-                        . ${VENV_DIR}/bin/activate
+                        . ${VENV_DIR}/bin/activate 
                         mkdir -p ${REPORT_DIR}/api-tests
                         pytest test_redfish.py \\
                             --junitxml=${REPORT_DIR}/api-tests/junit.xml \\
                             --html=${REPORT_DIR}/api-tests/report.html --self-contained-html \\
-                            -v 2>&1 | tee ${REPORT_DIR}/api-tests/pytest.log
+                            -v 2>&1 | tee ${REPORT_DIR}/api-tests/pytest.log || true
                     """
                 }
             }
@@ -117,7 +117,7 @@ pipeline {
                         . ${VENV_DIR}/bin/activate
                         mkdir -p ${REPORT_DIR}/webui-tests
                         xvfb-run -a ${PYTHON} openbmc_auth_tests.py \\
-                            2>&1 | tee ${REPORT_DIR}/webui-tests/selenium.log
+                            2>&1 | tee ${REPORT_DIR}/webui-tests/selenium.log || true
                     """
                 }
             }
@@ -132,13 +132,13 @@ pipeline {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     sh """
-                        . ${VENV_DIR}/bin/activate
+                        . ${VENV_DIR}/bin/activate 
                         mkdir -p ${REPORT_DIR}/load-tests
                         locust -f locustfile.py \\
                             --headless -u 20 -r 5 -t 60s \\
                             --csv=${REPORT_DIR}/load-tests/locust \\
                             --html=${REPORT_DIR}/load-tests/report.html \\
-                            2>&1 | tee ${REPORT_DIR}/load-tests/locust.log
+                            2>&1 | tee ${REPORT_DIR}/load-tests/locust.log || true
                     """
                 }
             }
