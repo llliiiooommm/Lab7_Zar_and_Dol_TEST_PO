@@ -85,7 +85,6 @@ pipeline {
 
         stage('API tests (PyTest + Redfish)') {
             steps {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     sh """
                         . ${VENV_DIR}/bin/activate 
                         mkdir -p ${REPORT_DIR}/api-tests
@@ -94,7 +93,6 @@ pipeline {
                             --html=${REPORT_DIR}/api-tests/report.html --self-contained-html \\
                             -v 2>&1 | tee ${REPORT_DIR}/api-tests/pytest.log || true
                     """
-                }
             }
             post {
                 always {
@@ -112,14 +110,12 @@ pipeline {
 
         stage('WebUI tests (Selenium)') {
             steps {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     sh """
                         . ${VENV_DIR}/bin/activate
                         mkdir -p ${REPORT_DIR}/webui-tests
                         xvfb-run -a ${PYTHON} openbmc_auth_tests.py \\
                             2>&1 | tee ${REPORT_DIR}/webui-tests/selenium.log || true
                     """
-                }
             }
             post {
                 always {
@@ -130,7 +126,6 @@ pipeline {
 
         stage('Load tests (Locust)') {
             steps {
-                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
                     sh """
                         . ${VENV_DIR}/bin/activate 
                         mkdir -p ${REPORT_DIR}/load-tests
@@ -140,7 +135,6 @@ pipeline {
                             --html=${REPORT_DIR}/load-tests/report.html \\
                             2>&1 | tee ${REPORT_DIR}/load-tests/locust.log || true
                     """
-                }
             }
             post {
                 always {
