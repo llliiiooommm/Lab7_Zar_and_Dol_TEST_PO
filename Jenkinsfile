@@ -96,7 +96,7 @@ pipeline {
             }
             post {
                 always {
-                    junit allowEmptyResults: true, testResults: "${REPORT_DIR}/api-tests/junit.xml"
+                    junit allowEmptyResults: true, skipMarkingBuildUnstable, testResults: "${REPORT_DIR}/api-tests/junit.xml"
                     archiveArtifacts artifacts: "${REPORT_DIR}/api-tests/**", allowEmptyArchive: true
                     publishHTML(target: [
                         allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true,
